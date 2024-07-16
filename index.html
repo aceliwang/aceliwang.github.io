@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Write a flexbox system -->
+    <!-- <link rel="stylesheet" href="src/style.css"> -->
+    <style>
+        body {
+            font-family: Segoe UI;
+            color: white;
+            --bg-color: #192a51;
+            --second-bg-color: #983bce;
+            --dark-color: #722292;
+            --second-dark-color: #967aa1;
+            --light-color: #f5e6e8;
+            background-color: var(--bg-color);
+        }
+
+        div#headings>div {
+            background: var(--dark-color);
+            color: var(--light-color);
+
+        }
+
+        div.row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        div.flex-1-wide {
+            flex: 2 1 0;
+        }
+
+        div.flex-2-wide {
+            flex: 2 1 0;
+        }
+
+        div.flex-05-wide {
+            flex: 1 1 0
+        }
+
+        div.row>div {
+            /* tooltip */
+            background: var(--light-color);
+            padding: 10px 0px;
+            /* width: 0; */
+            margin: 2px 0px;
+            /* border: solid black; */
+            text-align: center;
+        }
+
+        div.row > div.flex-05-wide:not(.patchtiptrigger) {
+            text-align: right;
+        }
+
+        div.row > .patchtiptrigger {
+            text-align: left
+        }
+
+
+        div.row>.patchtiptrigger:hover {
+            text-align: center;
+            padding: 0px;
+        }
+
+        div:has(+ .patchtrigger), div:has(+ .patchtrigger) input {
+            text-align: right;
+        }
+
+
+        input {
+            width: 30px;
+            text-align: center;
+            font-size: large;
+            background-color: transparent;
+            border-color: transparent;
+            color: var(--dark-color);
+        }
+
+        input#amount {
+            color: white;
+        }
+
+        input:disabled {
+            background-color: transparent;
+            border-color: transparent;
+            color: var(--second-dark-color)
+        }
+
+        .patchtip {
+            display: none;
+            color: var(--light-color);
+
+        }
+
+        .patchtiptrigger,
+        div.row>.patchtiptrigger>input {
+            text-align: left;
+        }
+
+        div.row>div:has(.patchtiptrigger:hover) {
+            text-align: center;
+            padding: 0px;
+        }
+
+        .patchtiptrigger:hover,
+        div:has(+ .patchtiptrigger:hover) {
+            background-color: var(--bg-color);
+        }
+
+        .patchtiptrigger:hover .patchtip {
+            display: inline;
+        }
+
+        div:has(+ .patchtiptrigger:hover),
+        .patchtiptrigger:hover input {
+            display: none;
+        }
+
+        .patchtiptrigger:hover {
+            flex: 2 1 0;
+        }
+
+        .appendix-row {
+            display: flex;
+            justify-content: start;
+        }
+
+        .appendix-row>.heading {
+            font-weight: bold;
+        }
+
+        .appendix-row>div {
+            flex: 1 1 0;
+            width: 0px;
+        }
+
+        .vertical-row {
+            display: flex;
+            gap: 6px;
+            padding-bottom: 3px;
+        }
+
+        .vertical-headings {
+            flex: 1 1 0;
+            background-color: var(--dark-color);
+            padding: 10px 0px;
+            text-align: center;
+        }
+
+        #master-channels, #strobe-channels {
+            flex: 9 1 0;
+            padding: 10px 10px;
+            background-color: var(--light-color);
+            color: var(--dark-color)
+        }
+    </style>
+
+</head>
+
+<body>
+    <h1>awkdr LED Strips Patch Tool</h1>
+    <hr>
+    <h2>Instructions</h2>
+    <ol>
+        <li>Update number of fixtures below</li>
+        <li>Add 1x desk channel for Master</li>
+        <li>Add 1x desk channel for Strobe</li>
+        <li>Add 12x desk channels for Yellow lights</li>
+        <li>Add 13x desk channels for White lights</li>
+        <li>Add 16x RGB channels for RGB lights</li>
+        <li>Update your universes and addresses below</li>
+        <li>Confirm your fixture numbers for Yellow, White and RGB lights</li>
+        <li>Patch master dimmer with below addresses
+            <ul>
+                <li>Edit channel default to be 100% or 255</li>
+                <li>Change channel minimum and maximum to 100% or 255</li>
+            </ul>
+        </li>
+        <li>Patch strobe channel (optional)</li>
+    </ol>
+    <hr>
+    Number of fixtures: <input id="amount" type="text" value="10">
+    <hr>
+    <!-- Pages: hardware, Y, W, RGB -->
+    <h2>Addresses</h2>
+    <div class="vertical-row">
+        <div class="vertical-headings">Master</div>
+        <div id="master-channels"></div>
+    </div>
+    <div class="vertical-row">
+        <div class="vertical-headings">Strobe</div>
+        <div id="strobe-channels"></div>
+    </div>
+    <div id="headings" class="row">
+        <div class="flex-1-wide">Fixture</div>
+        <div class="flex-1-wide">Universe</div>
+        <div class="flex-1-wide">Address</div>
+        <div class="flex-2-wide">Yellow</div>
+        <div class="flex-2-wide">White</div>
+        <div class="flex-2-wide">RGB</div>
+    </div>
+    <div id="edit"></div>
+    <br>
+    <hr>
+    <h2>Appendix</h2>
+    <b>Channel Mapping</b>
+    <br><br>
+    <div class="appendix-row">
+        <div class="heading">Channel 1</div>
+        <div class="detail">Master Dimming</div>
+    </div>
+    <div class="appendix-row">
+        <div class="heading">Channel 2</div>
+        <div class="detail">Strobe</div>
+    </div>
+    <div class="appendix-row">
+        <div class="heading">Channel 3-14</div>
+        <div class="detail">Yellow 1-12 Dimming</div>
+    </div>
+    <div class="appendix-row">
+        <div class="heading">Channel 15-27</div>
+        <div class="detail">White 1-13 Dimming</div>
+    </div>
+    <div class="appendix-row">
+        <div class="heading">Channel 28-75</div>
+        <div class="detail">RGB 1-16 Dimming</div>
+    </div>
+    <!-- Can make a diagram -->
+
+    <script>
+        let number_of_fixtures_field = document.getElementById("amount")
+        let number_of_fixtures = number_of_fixtures_field.value
+        let area = document.getElementById("edit")
+        function createFixtureRow() {
+            let row = document.createElement("div")
+            row.className = "row"
+            labeller = ["fixture_number", "universe", "address", "yellow_id", "yellow_address", "white_id", "white_address", "rgb_id", "rgb_address"]
+            for (let i = 0; i <= 8; i++) {
+                // nine columns/pages
+                let new_cell = document.createElement("div")
+                if (i < 3) {
+                    new_cell.className = "flex-1-wide"
+                } else {
+                    new_cell.className = "flex-05-wide"
+                }
+                let new_input = document.createElement("input")
+                new_input.className = labeller[i]
+                if ([3, 5, 7].includes(i)) {
+                    // new_cell.style.textAlign = "right"
+                    // new_input.style.textAlign = "right"
+                }
+                if ([4, 6, 8].includes(i)) {
+                    // new_cell.style.textAlign = "left"
+                    new_cell.className = "flex-05-wide patchtiptrigger"
+                    new_input.setAttribute("disabled", "true")
+                    // new_input.style.textAlign = "left"
+                }
+                new_cell.appendChild(new_input)
+                if (i > 2) { // fixture_id
+                    // let second_input = document.createElement("input")
+                    // second_input.setAttribute("disabled", "true")
+                    let patch_tip = document.createElement("div")
+                    patch_tip.className = "patchtip"
+                    // patch_tip.innerText = " 101.1 > 101.10 @ 1/3 "
+                    new_cell.appendChild(patch_tip)
+                    // new_cell.appendChild(second_input)
+                }
+                row.appendChild(new_cell)
+            }
+            area.appendChild(row)
+            return row
+        }
+
+        function removeFixtureRow(index = -1) {
+            if (index = -1) {
+                index = area.children.length - 1
+            }
+            area.removeChild(area.children[index])
+        }
+
+        const BarChannelAmount = 75
+        const DefaultYellowFixtureID = 101
+        const DefaultWhiteFixtureID = 111
+        const DefaultRGBFixtureID = 121
+        const DefaultFixtureAddress = 1
+
+        var PatchList = class {
+            constructor(number_of_fixtures = 10) {
+                this.fixture_list = Array()
+                this.fixture_history = []
+                for (let i = 0; i < number_of_fixtures; i++) {
+                    this.add_fixture()
+                }
+                this.generate_content()
+            }
+
+            add_fixture() {
+                let next_yellow_fixture_id, next_white_fixture_id, next_rgb_fixture_id, next_fixture_address, next_universe
+                if (this.fixture_list.length > 0) {
+                    let last_yellow_fixture_id, last_white_fixture_id, last_rgb_fixture_id, last_fixture_address, last_universe
+                    last_yellow_fixture_id = this.fixture_list.slice(-1)[0].fixture_ids["yellow"]
+                    last_white_fixture_id = this.fixture_list.slice(-1)[0].fixture_ids["white"]
+                    last_rgb_fixture_id = this.fixture_list.slice(-1)[0].fixture_ids["rgb"]
+                    last_fixture_address = this.fixture_list.slice(-1)[0].address
+                    last_universe = this.fixture_list.slice(-1)[0].universe
+                    next_yellow_fixture_id = last_yellow_fixture_id + 1
+                    next_white_fixture_id = last_white_fixture_id + 1
+                    next_rgb_fixture_id = last_rgb_fixture_id + 1
+                    if (last_fixture_address + 2 * BarChannelAmount < 512) {
+                        next_fixture_address = last_fixture_address + BarChannelAmount
+                        next_universe = last_universe
+                    } else {
+                        next_fixture_address = DefaultFixtureAddress
+                        next_universe = last_universe + 1
+                    }
+                } else {
+                    next_yellow_fixture_id = DefaultYellowFixtureID
+                    next_white_fixture_id = DefaultWhiteFixtureID
+                    next_rgb_fixture_id = DefaultRGBFixtureID
+                    next_fixture_address = DefaultFixtureAddress
+                }
+                var new_fixture = new Fixture({
+                    new_address: next_fixture_address,
+                    universe: next_universe,
+                    yellow_fixture_id: next_yellow_fixture_id,
+                    white_fixture_id: next_white_fixture_id,
+                    rgb_fixture_id: next_rgb_fixture_id
+                })
+                this.fixture_list.push(new_fixture)
+                createFixtureRow()
+                return new_fixture
+            }
+
+            remove_fixture(index = -1) {
+                this.fixture_list.splice(index, 1)
+                removeFixtureRow(index)
+            }
+
+            set_fixture_amount(new_fixture_amount) {
+                let number_of_active_fixtures = this.fixture_list.length
+                while (new_fixture_amount > this.fixture_list.length) {
+                    this.add_fixture()
+                }
+                while (new_fixture_amount < this.fixture_list.length) {
+                    this.remove_fixture()
+                }
+
+            }
+
+            set_fixture_id(fixture_index, new_id, colour) {
+                this.fixture_list[fixture_index].set_fixture_id(colour, new_id)
+                for (let i = 1; i < this.fixture_list.length - fixture_index; i++) {
+                    this.fixture_list[fixture_index + i].set_fixture_id(colour, new_id + i)
+                }
+            }
+
+            set_fixture_address(fixture_index, new_address) {
+                // this.fixture_list[fixture_index].set_address(new_address)
+                for (let i = 0; i < this.fixture_list.length - fixture_index; i++) {
+                    if (new_address + BarChannelAmount - 1 > 512 || new_address <= 0) {
+                        new_address = DefaultFixtureAddress
+                    }
+                    this.fixture_list[fixture_index + i].set_address(new_address)
+                    new_address = new_address + BarChannelAmount
+                }
+            }
+
+            set_fixture_universe(fixture_index, new_universe) {
+                this.fixture_list[fixture_index].universe = Number(new_universe)
+            }
+
+            generate_content() {
+                let array = []
+                for (let fixture of this.fixture_list) {
+                    array.push(fixture.label)
+                    array.push(fixture.universe)
+                    array.push(fixture.address)
+                    array.push(fixture.fixture_ids["yellow"])
+                    array.push(fixture.yellow_patch_tip)
+                    array.push(fixture.yellow_address)
+                    array.push(fixture.yellow_patch_tip)
+                    array.push(fixture.fixture_ids["white"])
+                    array.push(fixture.white_patch_tip) // NEEDS TO BE CHANGED
+                    array.push(fixture.white_address)
+                    array.push(fixture.white_patch_tip) // NEEDS TO BE CHANGED
+                    array.push(fixture.fixture_ids["rgb"])
+                    array.push(fixture.rgb_patch_tip) // NEEDS TO BE CHANGED
+                    array.push(fixture.rgb_address)
+                    array.push(fixture.rgb_patch_tip) // NEEDS TO BE CHANGED
+                }
+                return array
+            }
+
+            get_master_channels() {
+                let array = []
+                for (let fixture of this.fixture_list) {
+                    array.push(`${fixture.universe}/${fixture.master_dimmer}`)
+                }
+                return array.join(', ')
+            }
+
+            get_strobe_channels() {
+                let array = []
+                for (let fixture of this.fixture_list) {
+                    array.push(`${fixture.universe}/${fixture.strobe_channel}`)
+                }
+                return array.join(', ')
+            }
+
+        }
+
+        class Fixture {
+            constructor({ label = 1, new_address = 1, universe = 1, yellow_fixture_id = 101, white_fixture_id = 111, rgb_fixture_id = 121 }) {
+                this.label = label
+                this.fixture_ids = {
+                    "yellow": yellow_fixture_id,
+                    "white": white_fixture_id,
+                    "rgb": rgb_fixture_id
+                }
+                this.address = new_address
+                this.universe = universe
+                this.patch_assignments()
+            }
+
+            set_fixture_id(colour, new_fixture_id) {
+                this.fixture_ids[colour] = new_fixture_id
+                refreshFixtureContent()
+            }
+
+            set_address(new_address) {
+                this.address = new_address
+                this.patch_assignments()
+                refreshFixtureContent()
+            }
+
+            patch_assignments() {
+                this.master_dimmer = this.address + 0
+                this.strobe_channel = this.address + 1
+                this.yellow_address = this.address + 2
+                this.white_address = this.address + 14
+                this.rgb_address = this.address + 27
+
+                this.yellow_patch_tip = `${this.fixture_ids["yellow"]}.1>${this.fixture_ids["yellow"]}.12<br>@${this.universe}/${this.yellow_address}`
+                this.white_patch_tip = `${this.fixture_ids["white"]}.1>${this.fixture_ids["white"]}.13<br>@${this.universe}/${this.white_address}`
+                this.rgb_patch_tip = `${this.fixture_ids["rgb"]}.1>${this.fixture_ids["rgb"]}.16<br>@${this.universe}/${this.rgb_address}`
+            }
+
+        }
+        PatchList = new PatchList()
+        function refreshFixtureContent() {
+            let i = 0
+            let content = PatchList.generate_content()
+            // brute refresh
+            for (var row of area.children) {
+                for (var cell of row.children) {
+                    for (input of cell.children) {
+                        if (input.tagName == "INPUT") {
+                            input.value = content[i];
+                        } else if (input.tagName == "DIV") {
+                            input.innerHTML = content[i];
+                        }
+                        i += 1;
+                    }
+                }
+            }
+            document.getElementById("master-channels").innerText = PatchList.get_master_channels()
+            document.getElementById("strobe-channels").innerText = PatchList.get_strobe_channels()
+        }
+
+        refreshFixtureContent()
+
+        // onchange for fixture_amount
+        number_of_fixtures_field.onchange = function () {
+            PatchList.set_fixture_amount(Number(this.value))
+            refreshFixtureContent()
+        }
+
+        // onchange for input cells
+        for (var row of area.children) {
+            for (var cell of row.children) {
+                cell.children[0].onchange = function () {
+                    let new_value = Number(this.value)
+                    let aspect = this.className
+                    // this = input
+                    // this.parentNode = cell
+                    // this.parentNode.parentNode = row (need to find this)
+                    // this.parentNode.parentNode.parentNode = area
+                    let fixture = [...this.parentNode.parentNode.parentNode.children].indexOf(this.parentNode.parentNode)
+                    switch (aspect) {
+                        case "yellow_id":
+                            PatchList.set_fixture_id(fixture, new_value, colour = "yellow")
+                            break
+                        case "white_id":
+                            PatchList.set_fixture_id(fixture, new_value, colour = "white")
+                            break
+                        case "rgb_id":
+                            PatchList.set_fixture_id(fixture, new_value, colour = "rgb")
+                            break
+                        case "address":
+                            PatchList.set_fixture_address(fixture, new_value)
+                            break
+                        case "universe":
+                            PatchList.set_fixture_universe(fixture, new_value)
+                            break
+                    }
+                    this.parentNode.className
+                    refreshFixtureContent()
+
+                }
+            }
+        }
+
+
+
+    </script>
+</body>
+
+</html>
+
+<!-- 
+    Could do:
+    - Diagram with highlights
+    - Checklist (check off lights as you patch)
+    - Switch all to patch tips
+ -->
